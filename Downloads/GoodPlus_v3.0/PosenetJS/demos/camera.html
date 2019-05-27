@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Good + 顧家 - 坐姿偵測畫面</title>
+	<style>
+
+		.footer {
+			position: fixed;
+			left: 0;
+			bottom: 0;
+			width: 100%;
+			color: black;
+		}
+
+		.footer-text {
+			max-width: 600px;
+			text-align: center;
+			margin: auto;
+		}
+
+		@media only screen and (max-width: 600px) {
+			.footer-text, .dg {
+				display: none;
+			}
+		}
+	</style>
+	<link rel="Shortcut Icon" type="image/Icon" href="dist/images/logo.jpg" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script language="javascript">
+		//js脚本标注
+		var con;
+		con = confirm("Good + 顧家 - 坐姿偵測系統歡迎您的到來！"); //在页面上弹出对话框
+		if (con == true) alert("請記得登入以連動您的行動裝置喔！\n系統將於一分鐘後開始進行偵測作業！");
+		else alert("請記得登入以連動您的行動裝置喔！\n系統將於一分鐘後開始進行偵測作業！");
+	</script>
+
+</head>
+<!--<body background="dist\images\backgroundCamera.png">-->
+<body bgcolor="#CCEEFF">
+	<!--Google登入-->
+	<!--<div>
+		<button id="sign-in-button" class="mdl-button--raised mdl-button mdl-js-button mdl-js-ripple-effect"><i class="material-icons">account_circle</i> Sign in with Google</button>
+	</div>-->
+	<table border="0">
+		<tr>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>
+				<table>
+					<tr>
+						<td align="center" valign="middle">
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="index.html"><img src="dist/images/Home.png" width="225" height="225"></a>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="dist/images/Google.png" onclick="login()" width="225" height="225">
+						</td>
+					</tr>
+					<tr>
+						<td> </td>
+					</tr>
+					<tr>
+						<td align="center" valign="middle">
+							<table>
+								<tr>
+									<td>
+										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.facebook.com/Good-%E9%A1%A7%E5%AE%B6-%E5%9D%90%E5%A7%BF%E5%81%B5%E6%B8%AC%E7%B3%BB%E7%B5%B1-549402788799225/"><img src="dist/images/fb.png" width="150" height="150"></a>
+									</td>
+									<td>
+										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://twitter.com/GoodPlus4"><img src="dist/images/twitter.png" width="150" height="150"></a>
+									</td>
+									<td>
+										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.instagram.com/goodplus_fjuim/"><img src="dist/images/ig.png" width="150" height="150"></a>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+
+				</table>
+			</td>
+			<td>
+				<div id="info" style='display:none'>
+				</div>
+				<div id="loading">
+					Loading the model...
+				</div>
+				<div id='main' style='display:none'>
+					<video id="video" playsinline style=" -moz-transform: scaleX(-1);
+			-o-transform: scaleX(-1);
+			-webkit-transform: scaleX(-1);
+			transform: scaleX(-1);
+			display: none;
+			"></video>
+					<canvas id="output" />
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<!--<br />動態窗格<br />-->
+				<textarea id="myDiv01" rows="20" cols="80" style="display:none;"></textarea>
+			</td>
+			<td>
+				<!--<br />資料用窗格<br />-->
+				<!--交換資料用-->
+				<textarea id="myDiv02" rows="20" cols="80" style="display:none;"></textarea>
+				<textarea id="myDiv03" rows="10" cols="10" style="display:none;"></textarea>
+
+				<textarea id="EyesSlope" rows="10" cols="10" style="display:none;"></textarea>
+				<textarea id="EarsSlope" rows="10" cols="10" style="display:none;"></textarea>
+
+				<textarea id="area" rows="10" cols="10" style="display:none;"></textarea>
+
+				<textarea id="count_sum" rows="10" cols="10" style="display:none;"></textarea>
+				<textarea id="count_sum_for_left" rows="10" cols="10" style="display:none;"></textarea>
+				<textarea id="count_sum_for_right" rows="10" cols="10" style="display:none;"></textarea>
+				<textarea id="count_sum_for_distance" rows="10" cols="10" style="display:none;"></textarea>
+
+				<textarea id="firebase_done" rows="10" cols="10" style="display:none;"></textarea>
+				<textarea id="left_alert" rows="10" cols="10" style="display:none;"></textarea>
+				<textarea id="right_alert" rows="10" cols="10" style="display:none;"></textarea>
+				<textarea id="distance_alert" rows="10" cols="10" style="display:none;"></textarea>
+
+				<textarea id="ErrorMsg" rows="10" cols="10" style="display:none;"></textarea>
+
+				<!--觸發語音提醒-->
+				<audio id="RightAlertAudio">
+					<source src="\AlertMusic\Right.mp3" type="audio/mpeg">
+					Your browser does not support the audio element.
+				</audio>
+
+				<audio id="LeftAlertAudio">
+					<source src="\AlertMusic\Left.mp3" type="audio/mpeg">
+					Your browser does not support the audio element.
+				</audio>
+
+				<audio id="DistanceAlertAudio">
+					<source src="\AlertMusic\TooClose.mp3" type="audio/mpeg">
+					Your browser does not support the audio element.
+				</audio>
+
+				<button id ="RightAlert" onclick="playAudioRight()" type="button" style="display:none;">playAudioRight</button>
+				<button id = "LeftAlert" onclick="playAudioLeft()" type="button" style="display:none;">playAudioLeft</button>
+				<button id = "DistanceAlert" onclick="playAudioDistance()" type="button" style="display:none;">playAudioDistance</button>
+				<!--<button onclick="pauseAudio()" type="button">Pause Audio</button>-->
+
+				<script>
+					var RightAlertAudio = document.getElementById("RightAlertAudio");
+					var LeftAlertAudio = document.getElementById("LeftAlertAudio");
+					var DistanceAlertAudio = document.getElementById("DistanceAlertAudio");
+
+					function playAudioRight() {
+						RightAlertAudio.play();
+					}
+
+					function playAudioLeft() {
+						LeftAlertAudio.play();
+					}
+
+					function playAudioDistance() {
+						DistanceAlertAudio.play();
+					}
+
+					//function pauseAudio() {
+					//	x.pause();
+					//}
+				</script>
+
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<textarea id="myDiv03" rows="1" cols="4" style="display:none;"></textarea>
+			</td>
+		</tr>
+	</table>
+	<p></p>
+	<p></p>
+	<p></p>
+	<p></p>
+	<p></p>
+	<p></p>
+	<!-- Import and configure the Firebase SDK -->
+	<!-- These scripts are made available when the app is served or deployed on Firebase Hosting -->
+	<!-- If you do not serve/host your project using Firebase Hosting see https://firebase.google.com/docs/web/setup -->
+	<!--
+	Firebase App is always required and must be first -->
+	<!-- The core Firebase JS SDK is always required and must be listed first -->
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-app.js"></script>
+	<!-- Add additional services that you want to use -->
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-auth.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-database.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-messaging.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-functions.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase.js"></script>
+
+	<script>
+		// Your web app's Firebase configuration
+		var firebaseConfig = {
+			apiKey: "AIzaSyAjUqKsU30cY_bvES9fpt3oxtKBvpJoIHY",
+			authDomain: "wellsitting-ef0e5.firebaseapp.com",
+			databaseURL: "https://wellsitting-ef0e5.firebaseio.com",
+			projectId: "wellsitting-ef0e5",
+			storageBucket: "wellsitting-ef0e5.appspot.com",
+			messagingSenderId: "592790184519",
+			appId: "1:592790184519:web:ea6d5e18f0fd9112"
+		};
+		// Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        var provider = new firebase.auth.GoogleAuthProvider();
+        function login() {
+            firebase.auth().signInWithPopup(provider).then(function (result) {
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                var token = result.credential.accessToken;
+                // The signed-in user info.
+                var user = result.user;
+                //如果要取得uid，則下user.uid
+                ExportFile("user_id", user.uid);
+            }).catch(function (error) {
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                // The email of the user's account used.
+                var email = error.email;
+                // The firebase.auth.AuthCredential type that was used.
+                var credential = error.credential;
+            });
+        }
+        function logout() {
+            firebase.auth().signOut().then(function () {
+                // Sign-out successful.
+            }).catch(function (error) {
+                // An error happened.
+            });
+        }
+	</script>
+	<script src="scripts/main.js"></script>
+	<!-- Firebase ready -->
+
+
+	<script src="camera.js"></script>
+	<script>
+			var database = firebase.database();
+
+        //5秒重複執行一次
+			setTimeout(function () { setInterval(start, 0); }, 0);
+			//---------------------------------------------------------------------------------------------------------------
+			function start() {
+				const count_sum = document.getElementById('count_sum').value;
+				const count_sum_for_right = document.getElementById('count_sum_for_right').value;
+				const count_sum_for_left = document.getElementById('count_sum_for_left').value;
+				const count_sum_for_distance = document.getElementById('count_sum_for_distance').value;
+				if (count_sum >= 1300){//1300
+				  firebase.database().ref('test/').push({
+					signal: "Failed on the main page",
+				  });
+				  document.getElementById('firebase_done').value = "Done";
+				}
+
+				if (count_sum_for_right >= 1000) {//1000
+					document.getElementById('right_alert').value = "right";
+					document.getElementById('RightAlert').click();
+				}
+
+				if (count_sum_for_left >= 1000) {//1000
+					document.getElementById('left_alert').value = "left";
+					document.getElementById('LeftAlert').click();
+				}
+
+				if (count_sum_for_distance >= 500) {//500
+					document.getElementById('distance_alert').value = "distance";
+					document.getElementById('DistanceAlert').click();
+				}
+			}
+		</script>	
+</body>
+</html>

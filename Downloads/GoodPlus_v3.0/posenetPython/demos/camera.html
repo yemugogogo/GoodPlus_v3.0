@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Good + 顧家 - 坐姿偵測畫面</title>
+	<style>
+		.footer {
+			position: fixed;
+			left: 0;
+			bottom: 0;
+			width: 100%;
+			color: black;
+		}
+
+		.footer-text {
+			max-width: 600px;
+			text-align: center;
+			margin: auto;
+		}
+
+		@media only screen and (max-width: 600px) {
+			.footer-text, .dg {
+				display: none;
+			}
+		}
+	</style>
+	<link rel="Shortcut Icon" type="image/Icon" href="dist/images/logo.jpg" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script language="javascript">
+		//js脚本标注
+		var con;
+		con = confirm("Good + 顧家 - 坐姿偵測系統歡迎您的到來！"); //在页面上弹出对话框
+		if (con == true) alert("請記得登入以連動您的行動裝置喔！\n系統將於一分鐘後開始進行偵測作業！");
+		else alert("請記得登入以連動您的行動裝置喔！");
+	</script>
+</head>
+<!--<body background="dist\images\backgroundCamera.png">-->
+<body bgcolor="#CCEEFF">
+	<!-- Insert these scripts at the bottom of the HTML, but before you use any Firebase services -->
+	<!-- Firebase App (the core Firebase SDK) is always required and must be listed first 一定要放第一行-->
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-app.js"></script>
+
+	<!-- Add Firebase products that you want to use -->
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-auth.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-firestore.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/6.0.2/firebase-database.js"></script>
+	<table border="0">
+		<tr>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>
+				<table>
+					<tr>
+						<td align="center" valign="middle">
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="index.html" onclick="logout()"><img src="dist/images/Home.png" width="225" height="225"></a>
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="dist/images/Google.png" onclick="login()" width="225" height="225">
+						</td>
+					</tr>
+					<tr>
+						<td> </td>
+					</tr>
+					<tr>
+						<td align="center" valign="middle">
+							<table>
+								<tr>
+									<td>
+										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.facebook.com/Good-%E9%A1%A7%E5%AE%B6-%E5%9D%90%E5%A7%BF%E5%81%B5%E6%B8%AC%E7%B3%BB%E7%B5%B1-549402788799225/"><img src="dist/images/fb.png" width="150" height="150"></a>
+									</td>
+									<td>
+										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://twitter.com/GoodPlus4"><img src="dist/images/twitter.png" width="150" height="150"></a>
+									</td>
+									<td>
+										&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://www.instagram.com/goodplus_fjuim/"><img src="dist/images/ig.png" width="150" height="150"></a>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</td>
+			<td>
+				<div id="info" style='display:none'>
+				</div>
+				<div id="loading">
+					Loading the model...
+				</div>
+				<div id='main' style='display:none'>
+
+					<video id="video" playsinline style=" -moz-transform: scaleX(-1);
+			-o-transform: scaleX(-1);
+			-webkit-transform: scaleX(-1);
+			transform: scaleX(-1);
+			display: none;
+			"></video>
+					<canvas id="output" />
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<!--<br />動態窗格<br />-->
+				<textarea id="myDiv01" rows="20" cols="80"></textarea>
+			</td>
+			<td>
+				<!--<br />資料用窗格<br />-->
+				<textarea id="myDiv02" rows="20" cols="80"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<textarea id="myDiv03" rows="1" cols="4"></textarea>
+			</td>
+		</tr>
+	</table>
+
+	<p></p>
+
+
+
+
+	<p></p>
+	<p></p>
+	<p></p>
+	<br> PoseNet runs with either a <strong>single-pose</strong> or <strong>multi-pose</strong> detection algorithm. The single person pose detector is faster and more accurate but requires only one subject present in the image.
+	<br>
+	<br> The <strong>output stride</strong> and <strong>image scale factor</strong> have the largest effects on accuracy/speed. A <i>higher</i> output stride results in lower accuracy but higher speed. A <i>higher</i> image scale factor results in higher accuracy but lower speed.
+	<p></p>
+	<p></p>
+	<p></p>
+	<script src="camera.js"></script>
+	<script>
+		//每五秒重複執行一次
+		//setInterval(函數不加括號, 5000(毫秒，秒數*1000));
+		//設定等待七秒是為了即使沒有會漏掉第一次，可是如此可以避免產生空資料
+		//等待時長需要考慮到每台電腦的效能
+		setTimeout(function () { setInterval(start, 4000); }, 3000);
+		//---------------------------------------------------------------------------------------------------------------
+		function start() {
+
+			//取得當下時間，用於檔案命名
+			var today = new Date();
+
+			//取得Posenet的點輸出(每五秒更新一次)
+			const value = document.getElementById('myDiv02').value;
+			//將myDiv02的textarea中的值取出
+			//document.getElementById('myDiv02').value = value;
+			const times = document.getElementById('myDiv03').value;
+
+			//檔案名稱
+			const fileName = "Posenet_Points-" + times/* + today.getMinutes() + today.getSeconds() + today.getMilliseconds()*/ + ".json";
+
+			//執行輸出檔案函數
+			//console.log('export');
+			//ExportFile(fileName, value);
+			//console.log('export success');
+
+			var face = JSON.parse(value);
+			//console.log(face);
+			var x1 = face[0]["keypoints"][0]["position"]["x"];
+			var y1 = face[0]["keypoints"][0]["position"]["y"];
+			var x2 = face[0]["keypoints"][1]["position"]["x"];
+			var y2 = face[0]["keypoints"][1]["position"]["y"];
+			var x3 = face[0]["keypoints"][2]["position"]["x"];
+			var y3 = face[0]["keypoints"][2]["position"]["y"];
+			var x4 = face[0]["keypoints"][3]["position"]["x"];
+			var y4 = face[0]["keypoints"][3]["position"]["y"];
+			var x5 = face[0]["keypoints"][4]["position"]["x"];
+			var y5 = face[0]["keypoints"][4]["position"]["y"];
+			console.log(x1);
+			console.log(y1);
+			var db_ref = firebase.database().ref('temp/');
+			user = firebase.auth().currentUser;
+			console.log(user.uid);
+			db_ref.child(user.uid).set({
+				nose_x: x1,
+				nose_y: y1,
+				leftEye_x: x2,
+				leftEye_y: y2,
+				rightEye_x: x3,
+				rightEye_y: y3,
+				leftEar_x: x4,
+				leftEar_y: y4,
+				rightEar_x: x5,
+				rightEar_y: y5
+			});
+			
+			var db_ref1 = firebase.database().ref('temp/');
+			user = firebase.auth().currentUser;
+			console.log(user.uid);
+			db_ref1.child('name').set(user.uid);
+		}
+		//---------------------------------------------------------------------------------------------------------------
+		function ExportFile(_fileName, _text) {
+			//現行版本的html不支援直接下載，所以需要透過blob這個虛擬的主機方式
+			//進行一個平台的轉介
+			//https://segmentfault.com/a/1190000011563430
+			var textFileAsBlob = new Blob([_text], { type: 'text/plain' });
+			//創建元素節點，並為其取名
+			//如果 name 參數中含有不合法的字符
+			//該方法將抛出代碼為 INVALID_CHARACTER_ERR 的 DOMException 異常。
+			var downloadLink = document.createElement("a");
+			//取檔名
+			downloadLink.download = _fileName;
+			//innerHTML 屬性設置或返回表格行的開始和結束標籤之間的HTML。
+			downloadLink.innerHTML = "Download File";
+			//判斷電腦系統的。
+			//URL對象是硬盤指向文件的一个路徑，
+			//如果我們做文件上傳的時候，
+			//想在沒有上傳服務器端的情况下看到上傳圖片的效果圖的時候
+			//就可是以通過var url = window.URL.createObjectURL(obj.files[0]);
+			//獲得一个http格式的url路徑，這個時候就可以設置到 < img > 中顯示了。
+			//window.webkitURL和window.URL是一樣的，window.URL標準定義，
+			//window.webkitURL是webkit內核的實現，
+			//一般手機上就是使用這個，還有火狐等瀏覽器的實現。
+			if (window.webkitURL != null) {
+				// Chrome allows the link to be clicked
+				// without actually adding it to the DOM.
+				//Chrome允許點擊鏈接，而無需將其實際添加到DOM。
+				downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+			} else {
+				// Firefox requires the link to be added to the DOM
+				// before it can be clicked.
+				//Firefox要求在點擊之前將鏈接添加到DOM。
+				downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+				downloadLink.onclick = destroyClickedElement;
+				downloadLink.style.display = "none";
+				document.body.appendChild(downloadLink);
+			}
+			downloadLink.click();
+		}
+		//---------------------------------------------------------------------------------------------------------------
+		//用於當瀏覽器使用firefox時，需要進行的收尾函數
+		function destroyClickedElement(event) {
+			//將方才臨時產生的鏈結刪除
+			document.body.removeChild(event.target);
+		}
+	</script>
+	<script>
+		//登入
+		// Your web app's Firebase configuration
+		var firebaseConfig = {
+			apiKey: "AIzaSyAjUqKsU30cY_bvES9fpt3oxtKBvpJoIHY",
+			authDomain: "wellsitting-ef0e5.firebaseapp.com",
+			databaseURL: "https://wellsitting-ef0e5.firebaseio.com",
+			projectId: "wellsitting-ef0e5",
+			storageBucket: "wellsitting-ef0e5.appspot.com",
+			messagingSenderId: "592790184519",
+			appId: "1:592790184519:web:036b33c8c86c7f83"
+		};
+
+		// Initialize Firebase
+		firebase.initializeApp(firebaseConfig);
+		var provider = new firebase.auth.GoogleAuthProvider();
+		function login() {
+			firebase.auth().signInWithPopup(provider).then(function (result) {
+				// This gives you a Google Access Token. You can use it to access the Google API.
+				var token = result.credential.accessToken;
+				// The signed-in user info.
+				var user = result.user;
+				//如果要取得uid，則下user.uid
+				ExportFile("user_id", user.uid);
+			}).catch(function (error) {
+				// Handle Errors here.
+				var errorCode = error.code;
+				var errorMessage = error.message;
+				// The email of the user's account used.
+				var email = error.email;
+				// The firebase.auth.AuthCredential type that was used.
+				var credential = error.credential;
+			});
+		}
+		function logout(){
+			firebase.auth().signOut().then(function() {
+			// Sign-out successful.
+			}).catch(function(error) {
+			// An error happened.
+			});
+		}
+	</script>
+</body>
+</html>
